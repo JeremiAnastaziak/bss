@@ -11,7 +11,7 @@ int node = 2;
 int availableSlaves[256];
 int programSetup = 0;
 int masterSetup = 109;
-int slaveSetup = 115;
+int slaveSetup = 5;
 byte functionTestSlave = 0x01;
 byte functionSlaveId = 0x02;
 
@@ -99,8 +99,13 @@ void handleSlaveResponse() {
   radio.read( &slaveResponse, sizeof(slaveResponse));
   Serial.println("Message retrieved: ");
   Serial.print(slaveResponse[3]);
-  if(slaveResponse[3] == functionSlaveId) {
+  if(slaveResponse[1] == slaveSetup) {
     availableSlaves[0] = slaveResponse[1];
+    radio.stopListening();
+    radio.write(&frame, sizeof(frame));
+    Serial.print("moj id to: " );
+        Serial.print(slaveSetup);
+
   }
   
 }
