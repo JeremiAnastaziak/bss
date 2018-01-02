@@ -56,17 +56,26 @@ void runMasterMode() {
   radio.write( "Czesc tu borys", 14 );              // Send the final one back.     
   radio.startListening();  
   radio.openWritingPipe(pipes[1]);  
-  radio.openReadingPipe(1, pipes[0]);// Now, resume listening so we catch the next packets.     
+  radio.openReadingPipe(1, pipes[0]);// Now, resume listening so we catch the next packets. 
+  testSlaveAddress();    
 }
 
 void runSlaveMode() {
-  char got_time[23];
+  char slaveResponse[22];
+  radio.startListening();
   if( radio.available()){
     Serial.println("wiadomosc odebrana:");// Variable for the received timestamp
-    while (radio.available()) {                                   // While there is data ready
-      radio.read( &got_time, sizeof(got_time) );             // Get the payload
+    while (radio.available()) {      
+      
+      radio.startListening();
+      radio.read( &slaveResponse, sizeof(slaveResponse));
+      Serial.println("Message retrieved: ");
+      Serial.print(slaveResponse[3]);
+      if(slaveResponse[3] == functionSlaveId) {
+        availableSlaves[0] = slaveResponse[1];
+      }// While there is data ready
     }    
-    Serial.println(got_time); 
+    Serial.println(slaveResponse); 
   }
 }
 
@@ -74,4 +83,31 @@ void loop() {
   
 };
 
+void sendMessage(byte functionNumber, byte slaveId) {
+  frame[1] = byte(slaveId);
+  frame[3] = byte(functionNumber);
+  radio.stopListening();
+  radio.write(&frame, sizeof(frame));
+  Serial.print("Message send with function: " );
+  Serial.print(frame[1]);
+  Serial.println("");
+}
 
+void handleSlaveResponse() {
+  char slaveResponse[22];
+  radio.startListening();
+  radio.read( &slaveResponse, sizeof(slaveResponse));
+  Serial.println("Message retrieved: ");
+  Serial.print(slaveResponse[3]);
+  if(slaveResponse[3] == functionSlaveId) {
+    availableSlaves[0] = slaveResponse[1];
+  }
+  
+}
+
+
+void testSlaveAddress() {
+  for (int i=1; i++; i<=255) {
+    sendMessage(functionTestSlave, i);
+  }
+}
