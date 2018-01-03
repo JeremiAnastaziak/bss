@@ -69,8 +69,8 @@ void runMasterMode() {
       delay(500);
 
        radio.startListening();  
-//       radio.openWritingPipe(pipes[1]);  
-//       radio.openReadingPipe(1, pipes[0]);
+       radio.openWritingPipe(pipes[1]);  
+       radio.openReadingPipe(1, pipes[0]);
        
        if(radio.available()){
         radio.read( &buffer[0], sizeof(buffer));
@@ -99,10 +99,9 @@ void runSlaveMode() {
 
       if( buffer[0] == frame[2]){
         Serial.println("to jest moje id");
-        radio.stopListening();
         radio.openWritingPipe(pipes[0]);  
         radio.openReadingPipe(1, pipes[1]);
-              // First, stop listening so we can talk  
+        radio.stopListening();      // First, stop listening so we can talk  
         radio.write( &frame[2], sizeof(frame[2]) );
         radio.startListening();  
         radio.openWritingPipe(pipes[1]);  
