@@ -15,6 +15,7 @@ int slaveSetup = 5;
 byte functionTestSlave = 0x01;
 byte functionSlaveId = 0x02;
 int buffer[1];
+bool idReceived = false;
 
 void setup()
 {
@@ -23,8 +24,8 @@ void setup()
   frame[2] = 5; // id wezla
   Serial.begin(9600);
   radio.begin();
-  radio.openWritingPipe(pipes[1]);  
-  radio.openReadingPipe(1, pipes[0]);
+//  radio.openWritingPipe(pipes[1]);  
+//  radio.openReadingPipe(1, pipes[0]);
   radio.setRetries(15, 15);
   radio.startListening();
 
@@ -50,34 +51,34 @@ void setup()
 }
 
 void runMasterMode() {
-  Serial.println("wyslano");
+  Serial.println("Master");
   radio.openWritingPipe(pipes[0]);  
   radio.openReadingPipe(1, pipes[1]);
   radio.stopListening();      // First, stop listening so we can talk  
   radio.write( "Czesc tu borys", 14 ); 
-  // Send the final one back. 
+ 
       
-    for (int i=1; i<=255; i++) {
-    radio.openWritingPipe(pipes[0]);  
-    radio.openReadingPipe(1, pipes[1]);
-    radio.stopListening();      // First, stop listening so we can talk  
-      
+    for (int i=1; i<=10; i++) {
+    
+          
       buffer[0] = i;
       radio.write(&buffer[0], sizeof(buffer));
       Serial.print("Message send with adress: " );
       Serial.println(buffer[0]);
-      delay(500);
-
-       radio.startListening();  
-       radio.openWritingPipe(pipes[1]);  
-       radio.openReadingPipe(1, pipes[0]);
-       
-       if(radio.available()){
-        radio.read( &buffer[0], sizeof(buffer));
-        Serial.println(buffer[0]);
-       }
+     
       
+      delay(500);
     }
+
+       radio.startListening();
+      if( radio.available()){
+        Serial.println("otrzymałem id");  
+      }
+      
+//       radio.openWritingPipe(pipes[1]);  
+//       radio.openReadingPipe(1, pipes[0]);
+       
+      
     
  // Now, resume listening so we catch the next packets.
  
@@ -86,7 +87,9 @@ void runMasterMode() {
 
 void runSlaveMode() {
   char slaveResponse[22];
-  radio.startListening();
+  radio.openWritingPipe(pipes[1]);  
+  radio.openReadingPipe(1, pipes[0]);
+  //radio.startListening();
   if( radio.available()){
     Serial.println("wiadomosc odebrana:");// Variable for the received timestamp
     while (radio.available()) {      
@@ -97,20 +100,27 @@ void runSlaveMode() {
       Serial.println("Message retrieved: ");
       Serial.println(buffer[0]);
 
-      if( buffer[0] == frame[2]){
-        Serial.println("to jest moje id");
-        radio.openWritingPipe(pipes[0]);  
-        radio.openReadingPipe(1, pipes[1]);
-        radio.stopListening();      // First, stop listening so we can talk  
-        radio.write( &frame[2], sizeof(frame[2]) );
-        radio.startListening();  
-        radio.openWritingPipe(pipes[1]);  
-        radio.openReadingPipe(1, pipes[0]);// Now, resume listening so we catch the next packets. 
+      if(buffer[0] == frame[2]){
+        idReceived = true;
+        
+      }
+      
       }
       
     }    
     //Serial.println(slaveResponse); 
+
+    if(idReceived == true){
+        Serial.println("dostałem wezwanie id");
+        radio.stopListening();  
+            // First, stop listening so we can talk  
+        radio.write( "5", 1 );
+        radio.startListening(); 
+        //idReceived = false;
+  
   }
+
+ 
 }
 
 void loop() {
