@@ -70,11 +70,10 @@ void runMasterMode() {
       delay(500);
     }
 
-       radio.startListening();
-      if( radio.available()){
-        Serial.println("otrzymałem id");  
+      radio.startListening();  
+      if(radio.available()){
+        Serial.println("otrzymałem id");
       }
-      
 //       radio.openWritingPipe(pipes[1]);  
 //       radio.openReadingPipe(1, pipes[0]);
        
@@ -173,4 +172,3 @@ void nodeTest(){
     
   }
 }
-
